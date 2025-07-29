@@ -1,0 +1,2 @@
+ma.enset.iibdcc.extension.DaoImplV2
+ma.enset.iibdcc.metier.MetierImpl
