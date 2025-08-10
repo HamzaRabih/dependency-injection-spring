@@ -1,7 +1,9 @@
-package ma.enset.iibdcc.Partie1.extension;
+package ma.enset.iibdcc.extension;
 
-import ma.enset.iibdcc.Partie1.dao.IDoa;
+import ma.enset.iibdcc.dao.IDoa;
+import org.springframework.stereotype.Component;
 
+@Component("d2")
 public class DaoImplV2 implements IDoa {
     @Override
     public double getData() {

@@ -1,6 +1,14 @@
-package ma.enset.iibdcc.Partie1.metier;
-import ma.enset.iibdcc.Partie1.dao.IDoa;
+package ma.enset.iibdcc.metier;
+import ma.enset.iibdcc.dao.IDoa;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.stereotype.Component;
+
+@Component ("metier")
 public class MetierImpl implements IMetier {
+
+    @Autowired
+    @Qualifier("d2")
     private IDoa doa;
     /**
      * Pour injecter dans l'attribut dao

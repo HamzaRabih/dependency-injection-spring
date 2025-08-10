@@ -1,4 +1,4 @@
-package ma.enset.iibdcc.Partie1.dao;
+package ma.enset.iibdcc.dao;
 public interface IDoa {
     double getData();
 }

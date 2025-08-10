@@ -1,4 +1,4 @@
-package ma.enset.iibdcc.Partie1.metier;
+package ma.enset.iibdcc.metier;
 public interface IMetier {
     double calcul();
 }

@@ -1,80 +1,92 @@
-# 🖥️ TP – Injection de Dépendances avec Spring (Configuration XML)
+# 🖥️ TP – Injection de Dépendances avec Spring (Annotations)
 
 ## 📌 Remarque
-Cette branche est dédiée uniquement à l’injection de dépendances avec Spring XML.
-Les autres méthodes (instanciation statique, dynamique, annotations Spring) se trouvent dans d’autres branches.
+Cette branche est dédiée uniquement à l’injection de dépendances avec Spring Annotations.
+Les autres méthodes (instanciation statique, dynamique, Spring XML) se trouvent dans d’autres branches.
+
 
 ## 🎯 Objectif
-Cette partie du TP montre comment réaliser **l’injection de dépendances** en utilisant **Spring Framework** avec un **fichier de configuration XML**.  
-Cette approche permet de configurer les objets et leurs dépendances **sans modifier le code Java**, en externalisant la configuration.
+Cette partie du TP montre comment réaliser **l’injection de dépendances** en utilisant **Spring Framework** avec les **annotations** (`@Component`, `@Autowired`, `@Qualifier`), sans fichier XML.  
+Ici, la configuration se fait directement dans le code source.
 
 ---
 
 ## 📂 Structure du projet
 
-    java
-    ├──ma.enset.iibdcc.Partie1
+    ma.enset.iibdcc.Partie1
     │
     ├── dao
     │ ├── IDoa.java
-    │ └── DaoImpl.java
+    │ ├── DaoImpl.java # Version BDD (bean "d")
+    │ └── DaoImplV2.java # Version capteur (bean "d2")
     │
     ├── metier
     │ ├── IMetier.java
-    │ └── MetierImpl.java
+    │ └── MetierImpl.java # Injection via @Autowired
     │
     └── presentation
-    └── PresSpringXML.java # Point d'entrée du programme
-    ressources
-    ├──config.xml # Configuration Spring
+    └── PresSpringAnnotation.java
+---
 
 ---
 
 ## 🔍 Explication
 
-### 1. Fichier de configuration `config.xml`
-Ce fichier définit les **beans** (objets) que Spring va gérer, ainsi que leurs dépendances.
-
-```xml
-<beans xmlns="http://www.springframework.org/schema/beans"
-       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
-
-    <!-- Définition du DAO -->
-    <bean id="d" class="ma.enset.iibdcc.Partie1.dao.DaoImpl"></bean>
-
-    <!-- Définition du service métier avec injection de dépendance -->
-    <bean id="metier" class="ma.enset.iibdcc.Partie1.metier.MetierImpl">
-        <property name="doa" ref="d"></property>
-    </bean>
-</beans>
-```
-
-- id : identifiant du bean
-- class : nom complet de la classe à instancier
-- property : injection d’une dépendance via un setter (setDoa dans MetierImpl)
-
-### 2. Code Java PresSpringXML.java
+### 1. Déclaration des Beans avec `@Component`
+Spring détecte automatiquement les classes annotées avec `@Component` lors du **scan du package**.
 
 ```java
-   ApplicationContext SpringContext =
-   new ClassPathXmlApplicationContext("config.xml");
-    IMetier metier = (IMetier) SpringContext.getBean("metier");
-    System.out.println(metier.calcul());
+@Component("d")
+public class DaoImpl implements IDoa { ... }
 
+@Component("d2")
+public class DaoImplV2 implements IDoa { ... }
+```
+- @Component("idBean") : nom du bean dans le conteneur Spring
+
+## 2. Injection avec @Autowired et @Qualifier
+
+@Component("metier")
+public class MetierImpl implements IMetier {
+```java
+    @Component("metier")
+    public class MetierImpl implements IMetier {
+    
+        @Autowired
+        @Qualifier("d2") // Spécifie quelle implémentation utiliser
+        private IDoa doa;
+    
+        @Override
+        public double calcul() {
+            double t = doa.getData();
+            return t * 12 * Math.PI / 2 * Math.cos(t);
+        }
+    }
+```
+- @Autowired : injection automatique par Spring
+
+- @Qualifier : permet de choisir quelle implémentation utiliser si plusieurs existent
+
+## 3. Lancement de l’application
+
+```java
+    public class PresSpringAnnotation {
+    public static void main(String[] args) {
+    AnnotationConfigApplicationContext context =
+    new AnnotationConfigApplicationContext("ma.enset.iibdcc");
+    
+            IMetier metier = context.getBean(IMetier.class);
+            System.out.println(metier.calcul());
+        }
+    }
 ```
 
-- ApplicationContext : conteneur Spring qui lit la configuration et instancie les beans
-- getBean("metier") : récupération du bean métier configuré dans config.xml
-- L’injection se fait automatiquement grâce au fichier XML
+- AnnotationConfigApplicationContext("ma.enset.iibdcc") : scanne le package pour trouver les classes annotées
 
-### 3. Avantages
-Pas de modification du code pour changer l’implémentation
-Configuration centralisée dans un seul fichier
-Facilite les tests et la maintenance
+- getBean(IMetier.class) : récupère le bean MetierImpl automatiquement injecté avec le DAO choisi
 
 ## ⚙️ Dépendances Maven
-Ajouter dans pom.xml :
+
 ```xml
 <dependencies>
     <dependency>
@@ -93,11 +105,4 @@ Ajouter dans pom.xml :
         <version>6.2.9</version>
     </dependency>
 </dependencies>
-
 ```
-
-
-
-
-
-
