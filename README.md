@@ -1,97 +1,103 @@
-# 🖥️ TP – Injection de Dépendances en Java (Partie 1)
+# 🖥️ TP – Injection de Dépendances avec Spring (Configuration XML)
 
-## 🎯 Objectif du TP
-Ce TP a pour but de comprendre le concept **d'injection de dépendances** en Java et de l'appliquer à travers deux approches :
-1. **Instantiation statique** (couplage faible mais toujours modifiable)
-2. **Instantiation dynamique** (réflexion en Java)
+## 📌 Remarque
+Cette branche est dédiée uniquement à l’injection de dépendances avec Spring XML.
+Les autres méthodes (instanciation statique, dynamique, annotations Spring) se trouvent dans d’autres branches.
 
-L’objectif est de séparer les responsabilités entre couches (**DAO**, **métier**, **présentation**) tout en permettant de changer facilement les implémentations **sans modifier le code source** de la couche métier.
+## 🎯 Objectif
+Cette partie du TP montre comment réaliser **l’injection de dépendances** en utilisant **Spring Framework** avec un **fichier de configuration XML**.  
+Cette approche permet de configurer les objets et leurs dépendances **sans modifier le code Java**, en externalisant la configuration.
 
 ---
 
 ## 📂 Structure du projet
 
-    ma.enset.iibdcc.Partie1
+    java
+    ├──ma.enset.iibdcc.Partie1
     │
     ├── dao
-    │ ├── IDoa.java # Interface DAO (Data Access Object)
-    │ ├── DaoImpl.java # Implémentation version BDD
-    │ └── extension
-    │ └── DaoImplV2.java # Implémentation version capteur
+    │ ├── IDoa.java
+    │ └── DaoImpl.java
     │
     ├── metier
-    │ ├── IMetier.java # Interface métier
-    │ └── MetierImpl.java # Implémentation métier
+    │ ├── IMetier.java
+    │ └── MetierImpl.java
     │
     └── presentation
-    ├── Presentation1.java # Injection statique
-    └── Presentation2.java # Injection dynamique
+    └── PresSpringXML.java # Point d'entrée du programme
+    ressources
+    ├──config.xml # Configuration Spring
 
 ---
 
-## 🔍 Explication des concepts
+## 🔍 Explication
 
-### 1. Couplage faible
-Le **couplage faible** permet à une classe de dépendre d'une **abstraction** (interface) plutôt que d'une implémentation concrète.  
-Ainsi, on peut changer l'implémentation utilisée **sans changer le code métier**.
+### 1. Fichier de configuration `config.xml`
+Ce fichier définit les **beans** (objets) que Spring va gérer, ainsi que leurs dépendances.
 
-Exemple :
-```java
-// Couplage faible : dépendance vers l'interface
-private IDoa doa;
+```xml
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
+
+    <!-- Définition du DAO -->
+    <bean id="d" class="ma.enset.iibdcc.Partie1.dao.DaoImpl"></bean>
+
+    <!-- Définition du service métier avec injection de dépendance -->
+    <bean id="metier" class="ma.enset.iibdcc.Partie1.metier.MetierImpl">
+        <property name="doa" ref="d"></property>
+    </bean>
+</beans>
 ```
 
-### 2. Injection de dépendances
-📌 2.1. Instantiation statique
-Dans Presentation1, on crée directement les instances dans le code :
+- id : identifiant du bean
+- class : nom complet de la classe à instancier
+- property : injection d’une dépendance via un setter (setDoa dans MetierImpl)
 
-```java
-IDoa dao = new DaoImpl(); // Version BDD
-MetierImpl metier = new MetierImpl(dao); // Injection via constructeur
-```
-
- Avantage : Simple à comprendre et à implémenter.
-
- Inconvénient : Si on change l'implémentation (DaoImpl → DaoImplV2), il faut modifier et recompiler le code.
-
- ### 📌 2.2. Instantiation dynamique
-Dans Presentation2, on utilise la réflexion pour créer les objets à partir des noms de classes stockés dans un fichier (config.txt).
-
-Exemple config.txt :
-```txt
-    ma.enset.iibdcc.Partie1.extension.DaoImplV2
-    ma.enset.iibdcc.Partie1.metier.MetierImpl
-```
-Code principal :
+### 2. Code Java PresSpringXML.java
 
 ```java
-    Scanner sc = new Scanner(new File("config.txt"));
-    
-    // Lecture du nom de la classe DAO
-    String daoClassName = sc.nextLine();
-    Class cDao = Class.forName(daoClassName);
-    IDoa dao = (IDoa) cDao.newInstance();
-    
-    // Lecture du nom de la classe métier
-    String metierClassName = sc.nextLine();
-    Class cMetier = Class.forName(metierClassName);
-    IMetier metier = (IMetier) cMetier.getConstructor(IDoa.class).newInstance(dao);
-    
-    System.out.println("Résultat: " + metier.calcul());
-    
+   ApplicationContext SpringContext =
+   new ClassPathXmlApplicationContext("config.xml");
+    IMetier metier = (IMetier) SpringContext.getBean("metier");
+    System.out.println(metier.calcul());
+
 ```
 
- Avantage : Changer l’implémentation sans modifier le code (juste changer config.txt).
+- ApplicationContext : conteneur Spring qui lit la configuration et instancie les beans
+- getBean("metier") : récupération du bean métier configuré dans config.xml
+- L’injection se fait automatiquement grâce au fichier XML
 
- Inconvénient : Plus complexe, nécessite de gérer les exceptions liées à la réflexion.
+### 3. Avantages
+Pas de modification du code pour changer l’implémentation
+Configuration centralisée dans un seul fichier
+Facilite les tests et la maintenance
 
-# ⚙️ Exemple d’exécution
-```txt
-    Version BDD (Presentation1)
-    Résultat= 186.221
+## ⚙️ Dépendances Maven
+Ajouter dans pom.xml :
+```xml
+<dependencies>
+    <dependency>
+        <groupId>org.springframework</groupId>
+        <artifactId>spring-core</artifactId>
+        <version>6.2.9</version>
+    </dependency>
+    <dependency>
+        <groupId>org.springframework</groupId>
+        <artifactId>spring-context</artifactId>
+        <version>6.2.9</version>
+    </dependency>
+    <dependency>
+        <groupId>org.springframework</groupId>
+        <artifactId>spring-beans</artifactId>
+        <version>6.2.9</version>
+    </dependency>
+</dependencies>
+
 ```
-Version Capteur (Presentation2 avec config.txt)
-```txt
-    Version capteur:
-    Résultat:  121.556
-```
+
+
+
+
+
+
