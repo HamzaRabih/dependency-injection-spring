@@ -15,6 +15,11 @@ public class Presentation2 {
 
         String daoClassName = sc.nextLine();//Lire la 1er ligne
         Class cDao=Class.forName(daoClassName);//Pour créer une Classe à partir de ce nom
+
+        /**
+         * C'est comme IDoa d = new DaoImpl();
+         * pour utiliser les implementation de la class DaoImpl
+         */
         IDoa dao = (IDoa) cDao.newInstance();
         System.out.println(dao.getData());
 

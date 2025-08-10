@@ -1,2 +1,2 @@
-ma.enset.iibdcc.extension.DaoImplV2
-ma.enset.iibdcc.metier.MetierImpl
+ma.enset.iibdcc.Partie1.extension.DaoImplV2
+ma.enset.iibdcc.Partie1.metier.MetierImpl
